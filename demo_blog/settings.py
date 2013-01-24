@@ -3,6 +3,11 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+import os
+#figure out where settings.py is so we can find the project-level templates without 
+#hardcoding that.
+project_path = os.path.abspath(os.path.dirname(__file__))
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -106,6 +111,22 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    
+    #top-level templates dir, next to settings.py
+    os.path.join(project_path, 'templates'),
+)
+
+#template context processors:
+#see http://stackoverflow.com/questions/806835/django-redirect-to-previous-page-after-login
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.core.context_processors.tz",
+    "django.contrib.messages.context_processors.messages",
+    "django.core.context_processors.request",
 )
 
 INSTALLED_APPS = (
@@ -120,6 +141,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'demo_blog.blog',
+    'demo_blog.accounts',
 )
 
 # A sample logging configuration. The only tangible logging
