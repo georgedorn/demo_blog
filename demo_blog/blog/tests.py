@@ -33,6 +33,21 @@ class TestPostSlugs(TestCase):
         post_url = post.get_absolute_url()
         self.assertTrue('a-test-post' in post_url)
         self.assertFalse(str(post.pk) in post_url)
+        
+    def test_get_post(self):
+        """
+        Actually load a post's page by slug url
+        and make sure it works.
+        """
+        post = Post.objects.create(title='A Sorta Real Post', content='Just enough monkeys this time',
+                                   owner=self.user)
+        post_url = post.get_absolute_url()
+        
+        resp = self.client.get(post_url)
+        
+        self.assertContains(resp, post.content)
+        
+        
                                 
 
 
