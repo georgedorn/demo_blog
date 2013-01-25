@@ -3,3 +3,8 @@
 {{form.as_p}}
 <input type='submit' value='save'>
 </form>
+{% if object %}
+<form id='delete_form' method='GET' action='{% url post-delete slug=object.slug %}'>
+<input type='submit' value='delete'>
+</form>
+{% endif %}

@@ -2,7 +2,9 @@ from django.views.generic import ListView, DetailView, DeleteView, CreateView, U
 from django.views.generic.edit import ModelFormMixin
 from .forms import PostForm
 from .models import Post
-
+from django.views.generic.detail import SingleObjectMixin
+from django.http import HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
 
 class PostMixin(object):
     form_class = PostForm
@@ -22,6 +24,14 @@ class PostMixin(object):
         """
         return self.object.get_absolute_url()
 
+    def get_object(self, qs=None):
+        object = SingleObjectMixin.get_object(self, qs)
+        
+        if object is not None and object.owner != self.request.user:
+            raise PermissionDenied
+        
+        return object
+    
 
 class CreatePost(PostMixin, CreateView):
     pass
@@ -29,9 +39,9 @@ class CreatePost(PostMixin, CreateView):
 class EditPost(PostMixin, UpdateView):
     pass
 
-
 class DeletePost(PostMixin, DeleteView):
     pass
+
 
 class ListPosts(ListView):
     """
