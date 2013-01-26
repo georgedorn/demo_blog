@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+<ul id='posts'>
 {% for obj in object_list %}
-<a href='{{obj.get_absolute_url}}'>{{obj.title}}</a>
-{{obj.content}}
-by {{obj.owner}}
+<li>
+	<a href='{{obj.get_absolute_url}}'>{{obj.title}}</a> by {{obj.owner}}
+	{% if obj.owner == request.user %}
+		<a href='{{obj.get_edit_url}}'>edit</a>
+		<a href='{{obj.get_delete_url}}'>delete</a>
+	{% endif %}
+</li>
 {% endfor %}
-
+</ul>
 {% endblock %}

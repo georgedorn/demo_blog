@@ -11,7 +11,7 @@
     Hello, {{request.user}}.  
     {% if user.is_staff %}
         <a href='{% url post-create %}'>New Post</a>
-        <a href='{% url post-list %}'All Posts</a>
+        <a href='{% url post-list %}'>All Posts</a>
     {% endif %}
     {% include 'registration/logout_form.html' %}
 

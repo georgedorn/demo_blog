@@ -5,6 +5,7 @@
 You are going to delete the post entitled <a href='{{object.get_absolute_url}}'>{{object.title}}</a>.
 <form id='delete_post' action="{% url post-delete slug=object.slug %}" method='POST'>
 <input type='submit' value='Yes, delete post'>
+<a href='{{object.get_absolute_url}}'><input class='fake-submit-button' type='button' value='Ack, wait, no'></a>
 </form>
 
 {% endblock %}

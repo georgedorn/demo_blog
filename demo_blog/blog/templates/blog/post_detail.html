@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div id='title'>
+{{object.title}} by {{object.owner}} on {{object.created}}
+{% if object.owner == request.user %}
+	<a href='{{object.get_edit_url}}'>edit</a>
+	<a href='{{object.get_delete_url}}'>delete</a>
+{% endif %}
 
-{{object.title}}
+</div>
+
+<div id='content'>
 {{object.content}}
-by {{object.owner}} on {{object.created}}
+</div>
+
 
 {% endblock %}

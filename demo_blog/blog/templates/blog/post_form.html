@@ -1,10 +1,12 @@
+<ul id='edit_post'>
 <form id='post_form' method='POST'>
 {% csrf_token %}
-{{form.as_p}}
-<input type='submit' value='save'>
+{{form.as_ul}}
+<li><input type='submit' value='save'></li>
 </form>
 {% if object %}
 <form id='delete_form' method='GET' action='{% url post-delete slug=object.slug %}'>
-<input type='submit' value='delete'>
+<li><input type='submit' value='delete'></li>
 </form>
 {% endif %}
+</ul>
