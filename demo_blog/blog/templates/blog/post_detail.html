@@ -15,4 +15,10 @@
 </div>
 
 
-{% endblock %}
+{% include "blog/comment_form.html" %}
+
+{% for comment in object.get_comments %}
+	{% include "blog/comment_inline.html" %}
+{% endfor %}
+
+{% endblock content %}

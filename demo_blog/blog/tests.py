@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
 
-from .models import Post
+from .models import Post, Comment
 
 class TestPostSlugs(TestCase):
     """
@@ -200,3 +200,44 @@ class TestCRUDPosts(TestCase):
         res = self.client.post(delete_post_url)
         
         self.assertEqual(res.status_code, 403)
+        
+        
+class TestComments(TestCase):
+    
+    def setUp(self):
+        self.author = User.objects.create(username='post_author')
+        self.commenter = User.objects.create(username='logged_in_commenter') #for logged-in commenters
+        self.post = Post.objects.create(title='Base Post',
+                                        content='Just a dummy post',
+                                        owner=self.author)
+        
+    def test_comment_on_post_detail(self):
+        comment = Comment.objects.create(post=self.post,
+                                         user_name='Anonymous Commenter',
+                                         content='Nice post! Please view my website.')
+        res = self.client.get(self.post.get_absolute_url())
+        
+        self.assertContains(res, comment.content)
+        self.assertContains(res, comment.user_name)
+        
+    def test_logged_in_comment_on_post_detail(self):
+        comment = Comment.objects.create(post=self.post,
+                                         user=self.commenter,
+                                         content='Hey Author, long time no see!')
+        
+        res = self.client.get(self.post.get_absolute_url())
+
+        self.assertContains(res, comment.content)
+        self.assertContains(res, self.commenter.username)
+        
+
+    def test_get_comment_form_anon(self):
+        url = reverse_lazy('comment-create', kwargs={'post_slug':self.post.slug})
+        res = self.client.get(url)
+        
+        self.assertNotContains(res, 'id_parent')
+        self.assertContains(res, 'name="user_name"') #we're anon, so we should be asking for a user name
+        self.assertContains(res, url) #the ACTION should be specified
+        
+    
+        

@@ -25,6 +25,13 @@ class Post(models.Model):
 
     def get_delete_url(self):
         return reverse_lazy('post-delete', kwargs={'slug':self.slug})
+    
+    @staticmethod
+    def get_by_slug(slug):
+        return Post.objects.get(slug=slug)
+    
+    def get_comments(self):
+        return Comment.objects.filter(post=self).order_by('-created') #newest first?
         
 admin.site.register(Post)
     
@@ -46,6 +53,20 @@ class Comment(models.Model):
     
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        """
+        Overriding default save to automatically denormalize 
+        the user_name into the comment field.
+        
+        Technically a premature optimization, but makes the
+        comment display form a lot more straightforward, too.
+        """
+        if self.user and not self.user_name:
+            self.user_name = self.user.username
+            
+        return super(Comment, self).save(*args, **kwargs)
+        
     
     
     
