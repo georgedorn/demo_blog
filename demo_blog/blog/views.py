@@ -1,13 +1,13 @@
 from django.views.generic import ListView, DetailView, DeleteView, CreateView, UpdateView, View
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.detail import SingleObjectMixin
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-
+from django.core.urlresolvers import reverse_lazy
 
 from .forms import PostForm, CommentForm
 from .models import Post, Comment
@@ -46,8 +46,11 @@ class EditPost(PostMixin, UpdateView):
     pass
 
 class DeletePost(PostMixin, DeleteView):
-    pass
-
+    def get_success_url(self):
+        """
+        PostMixin's get_success_url doesn't make sense if the post's been deleted.
+        """
+        return reverse_lazy('post-list')
 
 class ListPosts(ListView):
     """
@@ -61,11 +64,19 @@ class ViewPost(DetailView):
     View a specific post.
     """
     model = Post
-    
+
+    def get_context_data(self, *args, **kwargs):
+        """
+        Add the comment form to the context so that it can be rendered.
+        """
+        context = super(ViewPost, self).get_context_data(*args, **kwargs)
+        context['comment_form'] = CommentForm(post=self.object,
+                                              user=self.request.user)
+        return context
 
 
 @csrf_protect
-def post_comment(request, post_slug):
+def post_comment(request, post_slug, parent_id=None):
     """
     Simple view to add a comment to a post.
     
@@ -75,14 +86,13 @@ def post_comment(request, post_slug):
     """
 
     post = get_object_or_404(Post, slug=post_slug)
-    parent_id = request.GET.get('comment_parent', None)
 
     if parent_id is not None:
         parent_comment = Comment.objects.get(pk=parent_id)
     else:
         parent_comment = None
 
-    form = CommentForm(post=post, data=request.POST or None)
+    form = CommentForm(post=post, user=request.user, data=request.POST or None)
     context = RequestContext(request, {})
     
     if request.method == 'POST':
@@ -92,11 +102,7 @@ def post_comment(request, post_slug):
             #don't save yet, we need to add some more data
             #from the request that isn't in the form
             comment = form.save(commit=False)
-            
-            #add the user if logged in
-            if request.user.is_authenticated():
-                comment.user = request.user
-            
+                        
             #add the comment's parent if there was one
             if parent_comment:
                 comment.parent = parent_comment

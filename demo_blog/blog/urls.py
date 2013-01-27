@@ -10,5 +10,5 @@ urlpatterns = patterns('',
     url(r'^(?P<slug>[-_\w]+)/edit/$', EditPost.as_view(), name='post-edit'),
     url(r'^(?P<slug>[-_\w]+)/delete/$', DeletePost.as_view(), name='post-delete'),
     url(r'^(?P<post_slug>[-_\w]+)/comment/$', post_comment, name='comment-create'),
-
+    url(r'^(?P<post_slug>[-_\w]+)/comment_reply/(?P<parent_id>\d+)/$', post_comment, name='reply-create'),
 )

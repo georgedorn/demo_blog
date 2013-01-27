@@ -14,8 +14,9 @@
 {{object.content}}
 </div>
 
-
-{% include "blog/comment_form.html" %}
+{% with comment_form as form %}
+	{% include "blog/comment_form.html" %}
+{% endwith %}
 
 {% for comment in object.get_comments %}
 	{% include "blog/comment_inline.html" %}

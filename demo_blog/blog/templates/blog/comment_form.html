@@ -1,0 +1,13 @@
+<ul id='add_comment'>
+<form id='add_comment_form' method='POST' 
+{% if parent_comment %}
+    action='{{parent_comment.get_reply_url}}'
+{% else %}
+    action='{% url comment-create post_slug=post.slug %}'
+{% endif %}
+>
+{% csrf_token %}
+{{form.as_ul}}
+<li><input type='submit' value='save'></li>
+</form>
+</ul>

@@ -184,6 +184,7 @@ class TestCRUDPosts(TestCase):
         res = self.client.post(delete_post_url)
         
         self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.get('Location'), reverse_lazy('post-list')) #redirect somewhere useful
         
         #no more posts
         post_count = Post.objects.count()
@@ -203,15 +204,33 @@ class TestCRUDPosts(TestCase):
         
         
 class TestComments(TestCase):
+    """
+    Tests of making and viewing comments.
+    """
+
+    def login(self):
+        """
+        Helper method.  Pairs with self.commenter from setUp().
+        """
+        self.client.login(username='logged_in_commenter',
+                          password='logged_in_commenter_pass')
     
     def setUp(self):
+        """
+        Fixtures shared between tests.
+        """
         self.author = User.objects.create(username='post_author')
-        self.commenter = User.objects.create(username='logged_in_commenter') #for logged-in commenters
+        self.commenter = User.objects.create_user(username='logged_in_commenter',
+                                                  password='logged_in_commenter_pass') #for logged-in commenters
         self.post = Post.objects.create(title='Base Post',
                                         content='Just a dummy post',
                                         owner=self.author)
+        self.comment_form_url = reverse_lazy('comment-create', kwargs={'post_slug':self.post.slug})
         
     def test_comment_on_post_detail(self):
+        """
+        Tests whether an anonymous comment appears on a post's detail page.
+        """
         comment = Comment.objects.create(post=self.post,
                                          user_name='Anonymous Commenter',
                                          content='Nice post! Please view my website.')
@@ -221,6 +240,9 @@ class TestComments(TestCase):
         self.assertContains(res, comment.user_name)
         
     def test_logged_in_comment_on_post_detail(self):
+        """
+        Tests whether a comment made by a user appears on a post's detail page.
+        """
         comment = Comment.objects.create(post=self.post,
                                          user=self.commenter,
                                          content='Hey Author, long time no see!')
@@ -232,12 +254,84 @@ class TestComments(TestCase):
         
 
     def test_get_comment_form_anon(self):
-        url = reverse_lazy('comment-create', kwargs={'post_slug':self.post.slug})
-        res = self.client.get(url)
+        """
+        Tests rendering of the comment form for an anon user.
+        user_name field should appear.
+        """
+        res = self.client.get(self.comment_form_url)
         
-        self.assertNotContains(res, 'id_parent')
+        self.assertNotContains(res, 'id_parent') #parent should never be in the form, it's a query string param only.
         self.assertContains(res, 'name="user_name"') #we're anon, so we should be asking for a user name
-        self.assertContains(res, url) #the ACTION should be specified
-        
+        self.assertContains(res, self.comment_form_url) #the ACTION should be specified
     
+    def test_get_comment_form_logged_in(self):
+        """
+        Tests rendering of the comment form for a logged-in user.
+        user_name field should NOT appear; the comment's user_name is
+        calculated from the logged-in user's.
+        """
+        self.login()
+        res = self.client.get(self.comment_form_url)
+        self.assertNotContains(res, 'user_name') #user_name field should not appear
         
+    def test_get_comment_form_anon_reply(self):
+        """
+        Tests rendering the comment form when replying to
+        another comment (as an anon user).
+        
+        Mostly ensures the comment_parent_id GET param appears.
+        """
+        comment = Comment.objects.create(post=self.post,
+                                                 user_name='Anonymous Commenter',
+                                                 content='Nice post! Please view my website.')
+        url = comment.get_reply_url()
+        res = self.client.get(url)
+
+        self.assertContains(res, url) #posts to correct url with parent id
+        self.assertContains(res, comment.pk)
+        self.assertContains(res, 'user_name')
+
+
+    def test_post_comment_anon(self):
+        """
+        Tests posting a comment as an anonymous user.
+        """
+        comment_params = {'user_name':'Anonymous Coward',
+                          'content': 'Could not disagree more!'}
+        
+        res = self.client.post(self.comment_form_url, data=comment_params)
+        
+        comment = self.post.get_comments()[0]
+        self.assertEqual(comment.user_name, comment_params['user_name'])
+        self.assertEqual(comment.content, comment_params['content'])
+    
+    def test_post_comment_logged_in(self):
+        """
+        Tests posting a comment as a logged-in user.
+        """
+        self.login()
+        
+        comment_params = {'content': 'Good on ya.'}
+        
+        res = self.client.post(self.comment_form_url, data=comment_params)
+        
+        comment = self.post.get_comments()[0]
+        self.assertEqual(comment.user_name, self.commenter.username)
+        self.assertEqual(comment.content, comment_params['content'])
+        
+    def test_post_comment_reply(self):
+        """
+        Tests posting a reply to another comment.
+        """
+        comment = Comment.objects.create(user_name='Anonymous',
+                                         content='This is a parent comment.  Please reply.',
+                                         post=self.post)
+        url = comment.get_reply_url()
+        
+        reply_params = {'user_name':'Anonymous 2',
+                        'content':'This is a child comment.'}
+        
+        res = self.client.post(url, data=reply_params)
+        
+        reply = Comment.objects.get(user_name='Anonymous 2')
+        self.assertEqual(reply.parent, comment)

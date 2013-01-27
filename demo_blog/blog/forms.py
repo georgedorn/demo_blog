@@ -31,10 +31,20 @@ class CommentForm(forms.ModelForm):
 
         super(CommentForm, self).__init__(*args, **kwargs)
         
-        if self.user:
-            self.fields['user_name'].visible = False
-            self.fields['user_name'].required = False
-            self.fields['user_name'].value = self.user.username
+        if self.user.is_authenticated():
+            # If we're logged in, don't ask for a username.
+            del self.fields['user_name']
+            
+    def save(self, commit=True, *args, **kwargs):
+        obj = super(CommentForm, self).save(commit=False, *args, **kwargs)
+        obj.post = self.post
+        if self.user.is_authenticated():
+            obj.user = self.user
+        
+        if commit:
+            obj.save()
+        
+        return obj
         
         
         

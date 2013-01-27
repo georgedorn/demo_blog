@@ -66,7 +66,11 @@ class Comment(models.Model):
             self.user_name = self.user.username
             
         return super(Comment, self).save(*args, **kwargs)
-        
     
-    
+    def get_reply_url(self):
+        """
+        Calculates the URL to get/post a reply to this comment.
+        """
+        return reverse_lazy('reply-create', kwargs={'post_slug':self.post.slug,
+                                                    'parent_id':self.pk})
     
