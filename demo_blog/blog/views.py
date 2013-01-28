@@ -4,17 +4,31 @@ from django.views.generic.detail import SingleObjectMixin
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_POST
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.core.urlresolvers import reverse_lazy
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
 
 from .forms import PostForm, CommentForm
 from .models import Post, Comment
 
-class PostMixin(object):
+class PostMixin(ModelFormMixin):
     form_class = PostForm
     model = Post #only needed for Delete
+    
+    @method_decorator(staff_member_required)
+    def dispatch(self, *args, **kwargs):
+        """
+        Only logged-in users with is_staff permission
+        should be able to interact with these views.
+
+        In the future, staff_member_required should probably
+        be replaced with something more helpful; that decorator 
+        doesn't actually redirect or 403, it just displays
+        a form to login (even if you're already logged in.)
+        """
+        return super(PostMixin, self).dispatch(*args, **kwargs)
     
     def form_valid(self, form):
         """
@@ -22,7 +36,7 @@ class PostMixin(object):
         to the user in the request.
         """
         form.instance.owner = self.request.user
-        return ModelFormMixin.form_valid(self, form)
+        return super(PostMixin, self).form_valid(form)
 
     def get_success_url(self):
         """
@@ -31,7 +45,7 @@ class PostMixin(object):
         return self.object.get_absolute_url()
 
     def get_object(self, qs=None):
-        object = SingleObjectMixin.get_object(self, qs)
+        object = super(PostMixin, self).get_object(qs)
         
         if object is not None and object.owner != self.request.user:
             raise PermissionDenied

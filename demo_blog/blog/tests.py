@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse_lazy
-
+from django.core.urlresolvers import reverse
+from django.core.exceptions import ObjectDoesNotExist
 from .models import Post, Comment
 
 class TestPostSlugs(TestCase):
@@ -61,11 +61,15 @@ class TestCRUDPosts(TestCase):
     """
     
     def setUp(self):
+        """
+        Common fixtures for most CRUD tests.
+        """
         self.user = User.objects.create_user('monkey', password='monkey_pass')
+        self.user.is_staff = True
+        self.user.save()
         self.client.login(username='monkey', password='monkey_pass')
-        self.create_post_url = reverse_lazy('post-create')
-        self.delete_post_url = reverse_lazy('post-delete')
-        
+        self.create_post_url = reverse('post-create')
+
 
     def test_create_post(self):
         """
@@ -76,11 +80,33 @@ class TestCRUDPosts(TestCase):
         post_params = {'title':'Post The First',
                 'content':'This is post #1.'}
         res = self.client.post(self.create_post_url, data=post_params)
-        self.assertEqual(res.status_code, 302)
-        self.assertTrue('post-the-first' in res.get('Location'))
 
         post = Post.objects.get(title=post_params['title'])
         self.assertEqual(post.owner, self.user)
+        
+        self.assertRedirects(res, reverse('post-detail', kwargs={'slug':post.slug}))
+
+    def test_create_post_not_staff(self):
+        """
+        Trying to create a post without having the is_staff bit set should
+        result in a 403.
+        """
+        #create a different user and login
+        normal_user = User.objects.create_user('fred', password='fred_pass')
+        #redundant, but for clarity:
+        normal_user.is_staff = False
+        normal_user.save()
+        
+        self.client.login(username='fred', password='fred_pass')
+        
+        post_params = {'title':'Normal User Post',
+                       'content':'This post should not be'}
+        
+        res = self.client.post(self.create_post_url, data=post_params)
+        
+        #check to make sure a blog post wasn't created.
+        self.assertRaises(ObjectDoesNotExist,
+                          Post.objects.get, title=post_params['title'])
         
     def test_update_post_get(self):
         """
@@ -91,7 +117,7 @@ class TestCRUDPosts(TestCase):
                                    content='This is an editable post about monkeys.',
                                    owner=self.user)
         
-        edit_post_url = reverse_lazy('post-edit', kwargs={'slug':post.slug})
+        edit_post_url = reverse('post-edit', kwargs={'slug':post.slug})
         res = self.client.get(edit_post_url)
         
         self.assertContains(res, post.title)
@@ -107,7 +133,7 @@ class TestCRUDPosts(TestCase):
                                    content='The continuing monkey saga.',
                                    owner=self.user)
         
-        edit_post_url = reverse_lazy('post-edit', kwargs={'slug':post.slug})
+        edit_post_url = reverse('post-edit', kwargs={'slug':post.slug})
         
         new_post_params = {'title':'RE: monkeys (part deux)',
                            'content':'More about monkeys.'}
@@ -129,7 +155,7 @@ class TestCRUDPosts(TestCase):
                                    content="Can't Edit Me",
                                    owner=other_user)
         
-        edit_post_url = reverse_lazy('post-edit', kwargs={'slug':post.slug})
+        edit_post_url = reverse('post-edit', kwargs={'slug':post.slug})
         
         res = self.client.get(edit_post_url)
         self.assertEqual(res.status_code, 403)
@@ -143,11 +169,11 @@ class TestCRUDPosts(TestCase):
                                    content='',
                                    owner=self.user)
         
-        edit_post_url = reverse_lazy('post-edit', kwargs={'slug':post.slug})
+        edit_post_url = reverse('post-edit', kwargs={'slug':post.slug})
         
         res = self.client.get(edit_post_url)
 
-        delete_post_url = reverse_lazy('post-delete', kwargs={'slug':post.slug})
+        delete_post_url = reverse('post-delete', kwargs={'slug':post.slug})
         
         self.assertContains(res, delete_post_url)
         
@@ -159,7 +185,7 @@ class TestCRUDPosts(TestCase):
                                    content='',
                                    owner=self.user)
         
-        delete_post_url = reverse_lazy('post-delete', kwargs={'slug':post.slug})
+        delete_post_url = reverse('post-delete', kwargs={'slug':post.slug})
         
         res = self.client.get(delete_post_url)
         
@@ -179,12 +205,10 @@ class TestCRUDPosts(TestCase):
                                    content='',
                                    owner=self.user)
         
-        delete_post_url = reverse_lazy('post-delete', kwargs={'slug':post.slug})
+        delete_post_url = reverse('post-delete', kwargs={'slug':post.slug})
 
         res = self.client.post(delete_post_url)
-        
-        self.assertEqual(res.status_code, 302)
-        self.assertEqual(res.get('Location'), reverse_lazy('post-list')) #redirect somewhere useful
+        self.assertRedirects(res, reverse('post-list'))
         
         #no more posts
         post_count = Post.objects.count()
@@ -196,7 +220,7 @@ class TestCRUDPosts(TestCase):
                                    content="Can't Edit Me",
                                    owner=other_user)
         
-        delete_post_url = reverse_lazy('post-delete', kwargs={'slug':post.slug})
+        delete_post_url = reverse('post-delete', kwargs={'slug':post.slug})
 
         res = self.client.post(delete_post_url)
         
@@ -225,7 +249,7 @@ class TestComments(TestCase):
         self.post = Post.objects.create(title='Base Post',
                                         content='Just a dummy post',
                                         owner=self.author)
-        self.comment_form_url = reverse_lazy('comment-create', kwargs={'post_slug':self.post.slug})
+        self.comment_form_url = reverse('comment-create', kwargs={'post_slug':self.post.slug})
         
     def test_comment_on_post_detail(self):
         """
