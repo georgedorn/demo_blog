@@ -35,7 +35,8 @@
           {% if user.is_authenticated %}
             <li>{% include 'registration/logout_form.html' %}
           {% else %}
-            <li><a href='{% url login %}?next={{request.path}}'>login</a>
+            <li><a href='{% url login %}?next={{request.path}}'>Login</a>
+            <li><a href='{% url registration_register %}'>Register</a>
           {% endif %}
         </ul>
       </div><!-- END NAV BUTTONS -->
