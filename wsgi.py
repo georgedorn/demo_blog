@@ -13,9 +13,16 @@ middleware here, or combine a Django application with an application of another
 framework.
 
 """
-import os
+import os, sys
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "demo_blog.settings")
+
+mypath = os.path.abspath(os.path.dirname(__file__))
+activate_this = os.path.join(mypath, '..', 'bin', 'activate_this.py')
+execfile(activate_this, dict(__file__=activate_this))
+
+sys.path.insert(0, mypath)
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'demo_blog.settings'
 
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
