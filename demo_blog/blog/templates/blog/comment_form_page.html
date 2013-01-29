@@ -1,0 +1,6 @@
+{% comment %}Very simple shim around the comment form, for use when not using AJAX to post comments.{%endcomment%}
+{% extends "base.html" %}
+
+{% block content %}
+{% include "blog/comment_form.html" %}
+{% endblock %}
