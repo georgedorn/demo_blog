@@ -1,4 +1,5 @@
 # Django settings for demo_blog project.
+from registration_defaults.settings import *
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -115,6 +116,7 @@ TEMPLATE_DIRS = (
     
     #top-level templates dir, next to settings.py
     os.path.join(project_path, 'templates'),
+#    REGISTRATION_TEMPLATE_DIR,
 )
 
 #template context processors:
@@ -137,12 +139,14 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'registration_defaults',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'demo_blog.blog',
     'demo_blog.accounts',
+    'demo_blog.registration', #fork of django-registration 0.7
 )
 
 # A sample logging configuration. The only tangible logging

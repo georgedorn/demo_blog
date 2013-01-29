@@ -220,11 +220,16 @@ class TestCRUDPosts(TestCase):
                                    content="Can't Edit Me",
                                    owner=other_user)
         
+        self.assertNotEqual(other_user, self.user)
+        
         delete_post_url = reverse('post-delete', kwargs={'slug':post.slug})
 
         res = self.client.post(delete_post_url)
         
+        #reload the post
+        post_reloaded = Post.objects.get(pk=post.pk) #will raise exception if deleted
         self.assertEqual(res.status_code, 403)
+        
         
         
 class TestComments(TestCase):
