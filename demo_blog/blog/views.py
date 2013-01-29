@@ -13,16 +13,17 @@ from django.utils.decorators import method_decorator
 from .forms import PostForm, CommentForm
 from .models import Post, Comment
 
+class AJAXPostFormMixin(object):
+    def get_template_names(self, *args, **kwargs):
+        if self.request.is_ajax():
+            return super(AJAXPostFormMixin, self).get_template_names(*args, **kwargs)
+        else:
+            return ['blog/post_form_page.html']
+
 class PostMixin(ModelFormMixin):
     form_class = PostForm
     model = Post #only needed for Delete
     template_name = 'blog/post_form.html'
-    
-    def get_template_names(self, *args, **kwargs):
-        if self.request.is_ajax():
-            return super(PostMixin, self).get_template_names(*args, **kwargs)
-        else:
-            return ['blog/post_form_page.html']
     
     @method_decorator(staff_member_required)
     def dispatch(self, *args, **kwargs):
@@ -55,20 +56,20 @@ class PostMixin(ModelFormMixin):
 
     def get_object(self, qs=None):
         object = super(PostMixin, self).get_object(qs)
-        
+       
         if object is not None and object.owner != self.request.user:
             raise PermissionDenied
         
         return object
     
 
-class CreatePost(PostMixin, CreateView):
+class CreatePost(AJAXPostFormMixin, PostMixin, CreateView):
     pass
 
-class EditPost(PostMixin, UpdateView):
+class EditPost(AJAXPostFormMixin, PostMixin, UpdateView):
     pass
 
-class DeletePost(DeleteView):
+class DeletePost(PostMixin, DeleteView):
     model = Post
     
     def get_success_url(self):
@@ -76,6 +77,7 @@ class DeletePost(DeleteView):
         PostMixin's get_success_url doesn't make sense if the post's been deleted.
         """
         return reverse_lazy('post-list')
+    
 
 class ListPosts(ListView):
     """

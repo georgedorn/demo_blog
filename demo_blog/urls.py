@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, include, url
 
 import blog.urls
+import registration.urls
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
@@ -14,5 +15,5 @@ urlpatterns = patterns('',
     url(r'', include(blog.urls)),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login', name='login'),
     url(r'^accounts/logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}, name='auth_logout'),
-
+    url(r'^accounts/', include(registration.urls)),
 )
