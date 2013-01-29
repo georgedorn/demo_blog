@@ -84,6 +84,7 @@ class ViewPost(DetailView):
         Add the comment form to the context so that it can be rendered.
         """
         context = super(ViewPost, self).get_context_data(*args, **kwargs)
+        context['comments'] = Comment.objects.filter(post=self.object).order_by('created')
         context['comment_form'] = CommentForm(post=self.object,
                                               user=self.request.user)
         return context
@@ -126,7 +127,7 @@ def post_comment(request, post_slug, parent_id=None):
 
             #build the URL to redirect to
             anchor = comment.pk
-            url = post.get_absolute_url() + '?comment_id=%s#comment_id' #revisit if post url changes or GET string added
+            url = post.get_absolute_url() + '?comment_id=%s#comment_id/%s' % (comment.pk, comment.pk) #revisit if post url changes or GET string added
             return HttpResponseRedirect(url)
     
     #we're here either due to a GET or the form had errors.

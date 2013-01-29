@@ -6,6 +6,8 @@
 	    {{comment.content}}
 	</div>
 	<div id='comment_{{comment.id}}_footer'>
-	<a href='{{comment.get_reply_url}}'>reply</a>
+	<a href='{{comment.get_reply_url}}' id='comment_{{comment.id}}_reply_link'>reply</a>
+	<a href='{{comment.get_reply_url}}?quote=true' id='comment_{{comment.id}}_quote_link'>quote</a>
+	<div class='inline-reply' id='comment_{{comment.id}}_inline_reply'></div>
 	</div>
 </div>    

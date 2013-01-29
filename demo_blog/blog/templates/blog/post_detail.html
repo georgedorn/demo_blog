@@ -14,12 +14,14 @@
 {{object.content}}
 </div>
 
+<div id='comments'>
+<h3>Add a comment</h3>
 {% with comment_form as form %}
 	{% include "blog/comment_form.html" %}
 {% endwith %}
 
-{% for comment in object.get_comments %}
+{% for comment in comments %}
 	{% include "blog/comment_inline.html" %}
 {% endfor %}
-
+</div>
 {% endblock content %}
