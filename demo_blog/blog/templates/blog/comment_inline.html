@@ -1,13 +1,17 @@
 <div id='comment_{{comment.id}}'>
-	<div id='comment_{{comment.id}}_head'>
+  <div id='comment_{{comment.id}}_head'>
 		{{comment.user_name}} said at {{comment.created}}:
-	</div>
-	<div id='comment_{{comment.id}}_content'>
+  </div>
+  <div id='comment_{{comment.id}}_content'>
 	    {{comment.content}}
-	</div>
-	<div id='comment_{{comment.id}}_footer'>
+  </div>
+
+  {% comment %}We're showing the comment as part of a reply, no need to show the reply/quote buttons yet again.{% endcomment %}
+  {% if hide_buttons != "true" %}
+  <div id='comment_{{comment.id}}_footer'>
 	<a href='{{comment.get_reply_url}}' id='comment_{{comment.id}}_reply_link'>reply</a>
 	<a href='{{comment.get_reply_url}}?quote=true' id='comment_{{comment.id}}_quote_link'>quote</a>
-	<div class='inline-reply' id='comment_{{comment.id}}_inline_reply'></div>
-	</div>
+    <div class='inline-reply' id='comment_{{comment.id}}_inline_reply'></div>
+  </div>
+  {% endif %}
 </div>    

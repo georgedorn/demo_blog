@@ -16,6 +16,13 @@ from .models import Post, Comment
 class PostMixin(ModelFormMixin):
     form_class = PostForm
     model = Post #only needed for Delete
+    template_name = 'blog/post_form.html'
+    
+    def get_template_names(self, *args, **kwargs):
+        if self.request.is_ajax():
+            return super(PostMixin, self).get_template_names(*args, **kwargs)
+        else:
+            return ['blog/post_form_page.html']
     
     @method_decorator(staff_member_required)
     def dispatch(self, *args, **kwargs):
@@ -29,6 +36,8 @@ class PostMixin(ModelFormMixin):
         a form to login (even if you're already logged in.)
         """
         return super(PostMixin, self).dispatch(*args, **kwargs)
+
+
     
     def form_valid(self, form):
         """
@@ -59,7 +68,9 @@ class CreatePost(PostMixin, CreateView):
 class EditPost(PostMixin, UpdateView):
     pass
 
-class DeletePost(PostMixin, DeleteView):
+class DeletePost(DeleteView):
+    model = Post
+    
     def get_success_url(self):
         """
         PostMixin's get_success_url doesn't make sense if the post's been deleted.
@@ -129,10 +140,14 @@ def post_comment(request, post_slug, parent_id=None):
             anchor = comment.pk
             url = post.get_absolute_url() + '?comment_id=%s#comment_id/%s' % (comment.pk, comment.pk) #revisit if post url changes or GET string added
             return HttpResponseRedirect(url)
-    
+
+    if request.is_ajax():
+        template_name = 'blog/comment_form.html'
+    else:
+        template_name = 'blog/comment_form_page.html'
     #we're here either due to a GET or the form had errors.
     #in either case, display the form
-    return render_to_response('blog/comment_form.html',
+    return render_to_response(template_name,
                                 {'form':form,
                                  'post':post,
                                  'parent_comment': parent_comment},

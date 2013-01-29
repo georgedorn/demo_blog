@@ -1,4 +1,12 @@
-<ul id='add_comment'>
+<div id='add_comment_form_div' class='content'>
+{% if parent_comment %}
+<h3>You are replying to:</h3>
+{% with parent_comment as comment %}
+{% with "true" as hide_buttons %}
+    {% include 'blog/comment_inline.html' %}
+{% endwith %}
+{% endwith %}
+{% endif %}
 <form id='add_comment_form' method='POST' 
 {% if parent_comment %}
     action='{{parent_comment.get_reply_url}}'
@@ -7,7 +15,7 @@
 {% endif %}
 >
 {% csrf_token %}
-{{form.as_ul}}
-<li><input type='submit' value='save'></li>
+{{form.as_p}}
+<input type='submit' value='save'>
 </form>
-</ul>
+</div>

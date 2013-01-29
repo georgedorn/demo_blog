@@ -1,18 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id='title'>
-{{object.title}} by {{object.owner}} on {{object.created}}
+<h2>{{object.title}}</h2>
+<h5> by {{object.owner}} on {{object.created}}
 {% if object.owner == request.user %}
 	<a href='{{object.get_edit_url}}'>edit</a>
 	<a href='{{object.get_delete_url}}'>delete</a>
 {% endif %}
+</h5>
 
-</div>
-
-<div id='content'>
+<p class='post content'>
 {{object.content}}
-</div>
+</p>
 
 <div id='comments'>
 <h3>Add a comment</h3>
@@ -20,8 +19,10 @@
 	{% include "blog/comment_form.html" %}
 {% endwith %}
 
+<ul>
 {% for comment in comments %}
-	{% include "blog/comment_inline.html" %}
+	<li>{% include "blog/comment_inline.html" %}
 {% endfor %}
+</ul>
 </div>
 {% endblock content %}

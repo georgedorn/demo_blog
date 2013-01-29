@@ -1,29 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{% block title %}The Demo Blog{% endblock %}</title>
+   <title>{% block title %}The Demo Blog{% endblock %}</title>
+   <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 80px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
 </head>
 
-<body>
-<div id='head'>
+<body data-spy="scroll" data-target=".bs-docs-sidebar">
+<!-- BEGIN NAV BAR -->
+<div class="navbar navbar-inverse navbar-fixed-top">
+  <!-- BEGIN INNER NAV BAR -->
+  <div class="navbar-inner">
+    <!-- BEGIN CONTAINER DIV -->
+    <div class="container">
+      <a class='brand' href='{% url post-list %}'>Demo Blog</a>
+        {% if request.user.is_authenticated %}
+          Hello, {{request.user}}.
+        {% else %}
+          Hello, anonymous.
+        {% endif %}
+      <!-- BEGIN NAV BUTTONS -->
+      <div class='nav-collapse collapse'>
+        <ul class='nav'>
+          <li><a href='{% url post-list %}'>All Posts</a>
+          {% if user.is_staff %}
+            <li><a href='{% url post-create %}'>New Post</a>
+          {% endif %} 
+          {% if user.is_authenticated %}
+            <li>{% include 'registration/logout_form.html' %}
+          {% else %}
+            <li><a href='{% url login %}?next={{request.path}}'>login</a>
+          {% endif %}
+        </ul>
+      </div><!-- END NAV BUTTONS -->
+    </div><!-- END CONTAINER DIV-->
+  </div><!-- END INNER NAV BAR -->
+</div><!-- END NAV BAR -->
 
-{% if request.user.is_authenticated %}
-    Hello, {{request.user}}.  
-    {% if user.is_staff %}
-        <a href='{% url post-create %}'>New Post</a>
-        <a href='{% url post-list %}'>All Posts</a>
-    {% endif %}
-    {% include 'registration/logout_form.html' %}
+
+<!-- BEGIN MAIN BODY -->
+<div class="container wide">
+    {% block content %}{% endblock %}
+</div> 
+<!-- END MAIN BODY -->
 
 
-{% else %}
-    Hello, anonymous.  <a href='{% url login %}?next={{request.path}}'>login</a>
-{% endif %}
-</div>
-
-<div id='content'>
-{% block content %}{% endblock %}
-</div>
+<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
 </body>
 
 
