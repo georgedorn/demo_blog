@@ -132,6 +132,11 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
 )
 
+#in the case that we don't have a previous page to redirect to,
+#e.g. somebody clicked the activation url,
+#go home after login
+LOGIN_REDIRECT_URL = '/' 
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',

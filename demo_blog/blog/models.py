@@ -74,3 +74,5 @@ class Comment(models.Model):
         return reverse_lazy('reply-create', kwargs={'post_slug':self.post.slug,
                                                     'parent_id':self.pk})
     
+admin.site.register(Comment)
+
