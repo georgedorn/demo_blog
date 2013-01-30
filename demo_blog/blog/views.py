@@ -134,7 +134,6 @@ def post_comment(request, post_slug, parent_id=None):
             #add the comment's parent if there was one
             if parent_comment:
                 comment.parent = parent_comment
-
             #now save
             comment.save()
 

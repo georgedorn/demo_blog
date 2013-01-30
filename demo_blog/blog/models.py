@@ -72,13 +72,13 @@ class Comment(models.Model):
         #the parent's ID appended.
         if self.parent:
             if self.parent.thread_path:
-                parent_path = self.parent.thread_path.split(comment_path_separator)
+                path = self.parent.thread_path.split(comment_path_separator)
             else:
-                parent_path = []
+                path = []
 
-            parent_path.append(str(self.parent.pk))
+            path.append(str(self.parent.pk))
             
-            self.thread_path = comment_path_separator.join(parent_path)
+            self.thread_path = comment_path_separator.join(path)
         else:
             self.thread_path = ''
         return super(Comment, self).save(*args, **kwargs)

@@ -14,7 +14,7 @@ class PostForm(forms.ModelForm):
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        exclude = ('user', 'post', 'parent')
+        exclude = ('user', 'post', 'parent', 'thread_path')
         widgets = {
                     'user_name': forms.TextInput()
             }
