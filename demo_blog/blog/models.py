@@ -52,10 +52,55 @@ class Comment(models.Model):
     
     parent = models.ForeignKey('Comment', null=True, default=None) #for threaded comments, later
     
-    thread_path = models.TextField(default='', blank=True) #stores the entire path of this comment
+    #this is actually unused at the moment, but could be used
+    #for pagination or AJAX loading of comment trees.
+    thread_path = models.TextField(default=None,
+                                   null=True) #stores the entire path of this comment
     
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created']
+    
+    @staticmethod
+    def get_top_comments_for_post(post):
+        """
+        Get comments that are direct replies to the main post,
+        and not replies to other comments.
+        """
+        return Comment.objects.filter(post=post, parent=None)
+
+    @property
+    def replies(self):
+        """
+        Returns all comments that directly reply to this comment.
+        """
+        return Comment.objects.filter(parent=self)
+        
+    @property
+    def path_list(self):
+        """
+        Converts the delimited string version of comment's path
+        to a list of strings of pks.
+        """
+        if not self.thread_path:
+            return []
+        return self.thread_path.split(comment_path_separator)
+
+    @property
+    def descendants_count(self):
+        """
+        Only applicable to top-level comments, this property
+        counts all descendants from this comment.
+        """
+        if self.thread_path != '':
+            raise ValueError('descendants_count only valid for top-level comments')
+        
+        filter_string = "%s%s" % (self.pk, comment_path_separator)
+        qs = (Comment.objects.filter(thread_path=str(self.pk)) |
+                Comment.objects.filter(thread_path__startswith=filter_string))
+        return qs.count()
     
     def save(self, *args, **kwargs):
         """
@@ -71,23 +116,20 @@ class Comment(models.Model):
         #conveniently, it's just the parent's thread_path with
         #the parent's ID appended.
         if self.parent:
-            if self.parent.thread_path:
-                path = self.parent.thread_path.split(comment_path_separator)
-            else:
-                path = []
-
+            path = self.parent.path_list
             path.append(str(self.parent.pk))
             
             self.thread_path = comment_path_separator.join(path)
         else:
-            self.thread_path = ''
+            self.thread_path = None
         return super(Comment, self).save(*args, **kwargs)
     
     @property
     def depth(self):
-        if self.thread_path == '':
-            return 0
-        return len(self.thread_path.split(comment_path_separator))
+        """
+        Determines the depth of this comment, with 0 being top-level.
+        """
+        return len(self.path_list)
     
     def get_reply_url(self):
         """

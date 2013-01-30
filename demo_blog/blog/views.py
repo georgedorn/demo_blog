@@ -97,7 +97,7 @@ class ViewPost(DetailView):
         Add the comment form to the context so that it can be rendered.
         """
         context = super(ViewPost, self).get_context_data(*args, **kwargs)
-        context['comments'] = Comment.objects.filter(post=self.object).order_by('created')
+        context['comments'] = Comment.get_top_comments_for_post(post=self.object)
         context['comment_form'] = CommentForm(post=self.object,
                                               user=self.request.user)
         return context

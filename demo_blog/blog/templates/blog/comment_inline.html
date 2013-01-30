@@ -1,17 +1,43 @@
 <div id='comment_{{comment.id}}'>
   <div id='comment_{{comment.id}}_head'>
 		{{comment.user_name}} said at {{comment.created}}:
+  {% if reply_mode != "true" %}
+	<a href='{{comment.get_reply_url}}' id='comment_{{comment.id}}_reply_link'>reply</a>
+	{% comment %}
+	(Enable this when quoting support is added.)
+	<a href='{{comment.get_reply_url}}?quote=true' id='comment_{{comment.id}}_quote_link'>quote</a>
+	{% endcomment %}
+	<div class='inline-reply' id='comment_{{comment.id}}_inline_reply'></div>
+  
+  {% endif %}
   </div>
   <div id='comment_{{comment.id}}_content'>
 	    {{comment.content}}
   </div>
 
-  {% comment %}We're showing the comment as part of a reply, no need to show the reply/quote buttons yet again.{% endcomment %}
-  {% if hide_buttons != "true" %}
-  <div id='comment_{{comment.id}}_footer'>
-	<a href='{{comment.get_reply_url}}' id='comment_{{comment.id}}_reply_link'>reply</a>
-	<a href='{{comment.get_reply_url}}?quote=true' id='comment_{{comment.id}}_quote_link'>quote</a>
-    <div class='inline-reply' id='comment_{{comment.id}}_inline_reply'></div>
+  {% comment %}
+  If we're in reply mode, we stop here and don't show children of this comment or reply/quote buttons.
+  {% endcomment %}
+  {% if reply_mode != "true" %}
+  
+  {% comment %}
+  Recursively show this comment's replies.
+  Note that this is primitive and can lead to disqus-like indentation problems.
+  Also, see http://stackoverflow.com/a/12558610/402605 for the
+  explanation for "with template_name=foo" syntax; without it, you get infinite recursion
+  as Django's template engine tries to solve the halting problem or something.
+  {% endcomment %}
+  <div class='comment_children'>
+    <ul>
+    {% for reply in comment.replies %}
+      {% with reply as comment %}
+      {% with template_name='blog/comment_inline.html' %}
+	<li>{% include template_name %}</li>
+      {% endwith %}
+      {% endwith %}
+    {% endfor %}
+   </ul>
   </div>
+  
   {% endif %}
-</div>    
+</div>

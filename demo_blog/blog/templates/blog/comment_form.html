@@ -2,7 +2,7 @@
 {% if parent_comment %}
 <h3>You are replying to:</h3>
 {% with parent_comment as comment %}
-{% with "true" as hide_buttons %}
+{% with reply_mode="true" %}
     {% include 'blog/comment_inline.html' %}
 {% endwith %}
 {% endwith %}

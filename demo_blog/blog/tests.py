@@ -372,15 +372,13 @@ class TestCommentPath(CommentTestCase):
     
     def test_comment_path_top(self):
         """
-        Add a comment to a post.  The comment's path should be empty
-        and depth should be 0.
+        Add a comment to a post.  The comment's depth should be 0.
         """
         
         comment = Comment.objects.create(user=self.commenter,
                                          post=self.post,
                                          content='This is a top-level comment.')
         
-        self.assertEqual(comment.thread_path, '')
         self.assertEqual(comment.depth, 0)
         
     def test_comment_path_one(self):
@@ -422,3 +420,23 @@ class TestCommentPath(CommentTestCase):
         self.assertTrue(parent_comment.thread_path in comment.thread_path)
         
         self.assertEqual(comment.depth, 2)
+        
+    def test_get_replies(self):
+        """
+        Create a comment with two replies, test comment.replies property.
+        """
+        parent_comment = Comment.objects.create(user=self.commenter,
+                                                post=self.post,
+                                                content='This is the parent comment.')
+        child_one = Comment.objects.create(user=self.commenter,
+                                           post=self.post,
+                                           content='This is the first child comment.',
+                                           parent=parent_comment)
+        child_two = Comment.objects.create(user=self.commenter,
+                                           post=self.post,
+                                           content='This is the second child comment.',
+                                           parent=parent_comment)
+        
+        replies = parent_comment.replies
+        self.assertTrue(child_one in replies)
+        self.assertTrue(child_two in replies)
