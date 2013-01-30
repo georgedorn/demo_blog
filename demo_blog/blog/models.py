@@ -35,7 +35,8 @@ class Post(models.Model):
         
 admin.site.register(Post)
     
-    
+
+comment_path_separator = ';'
 class Comment(models.Model):
     """
     Represents a comment on a post.
@@ -51,21 +52,42 @@ class Comment(models.Model):
     
     parent = models.ForeignKey('Comment', null=True, default=None) #for threaded comments, later
     
+    thread_path = models.TextField(default='', blank=True) #stores the entire path of this comment
+    
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     
     def save(self, *args, **kwargs):
         """
-        Overriding default save to automatically denormalize 
-        the user_name into the comment field.
-        
-        Technically a premature optimization, but makes the
-        comment display form a lot more straightforward, too.
+        Overriding default save to:
+        - denormalize username into this model (standardizing whether comment
+          came from a logged-in user or anon
+        - calculate this comment's thread path and save it.
         """
         if self.user and not self.user_name:
             self.user_name = self.user.username
             
+        #also calculate the thread_path
+        #conveniently, it's just the parent's thread_path with
+        #the parent's ID appended.
+        if self.parent:
+            if self.parent.thread_path:
+                parent_path = self.parent.thread_path.split(comment_path_separator)
+            else:
+                parent_path = []
+
+            parent_path.append(str(self.parent.pk))
+            
+            self.thread_path = comment_path_separator.join(parent_path)
+        else:
+            self.thread_path = ''
         return super(Comment, self).save(*args, **kwargs)
+    
+    @property
+    def depth(self):
+        if self.thread_path == '':
+            return 0
+        return len(self.thread_path.split(comment_path_separator))
     
     def get_reply_url(self):
         """

@@ -230,12 +230,7 @@ class TestCRUDPosts(TestCase):
         post_reloaded = Post.objects.get(pk=post.pk) #will raise exception if deleted
         self.assertEqual(res.status_code, 403)
         
-        
-        
-class TestComments(TestCase):
-    """
-    Tests of making and viewing comments.
-    """
+class CommentTestCase(TestCase):    
 
     def login(self):
         """
@@ -255,6 +250,13 @@ class TestComments(TestCase):
                                         content='Just a dummy post',
                                         owner=self.author)
         self.comment_form_url = reverse('comment-create', kwargs={'post_slug':self.post.slug})
+        
+
+class TestComments(CommentTestCase):
+    """
+    Tests of making and viewing comments.
+    """
+
         
     def test_comment_on_post_detail(self):
         """
@@ -364,3 +366,59 @@ class TestComments(TestCase):
         
         reply = Comment.objects.get(user_name='Anonymous 2')
         self.assertEqual(reply.parent, comment)
+        
+from .models import comment_path_separator
+class TestCommentPath(CommentTestCase):
+    
+    def test_comment_path_top(self):
+        """
+        Add a comment to a post.  The comment's path should be empty
+        and depth should be 0.
+        """
+        
+        comment = Comment.objects.create(user=self.commenter,
+                                         post=self.post,
+                                         content='This is a top-level comment.')
+        
+        self.assertEqual(comment.thread_path, '')
+        self.assertEqual(comment.depth, 0)
+        
+    def test_comment_path_one(self):
+        """
+        Reply to a comment.  The path should contain the parent's id
+        and depth should be 1.
+        """
+        
+        parent_comment = Comment.objects.create(user=self.commenter,
+                                                post=self.post,
+                                                content='This is the parent comment.')
+        child_comment = Comment.objects.create(user=self.commenter, 
+                                               post=self.post,
+                                               content='This is the child comment',
+                                               parent=parent_comment)
+        
+        self.assertEqual(child_comment.thread_path, str(parent_comment.pk))
+        self.assertEqual(child_comment.depth, 1)
+        
+    def test_comment_path_two(self):
+        """
+        Reply to a reply to a comment.  Path is now grandparent;parent, depth is 2.
+        """
+        
+        gparent_comment = Comment.objects.create(user=self.commenter,
+                                                post=self.post,
+                                                content='This is the grandparent comment.')
+        parent_comment = Comment.objects.create(user=self.commenter, 
+                                               post=self.post,
+                                               content='This is the parent comment',
+                                               parent=gparent_comment)
+
+        comment = Comment.objects.create(user=self.commenter, 
+                                               post=self.post,
+                                               content='This is the child comment',
+                                               parent=parent_comment)
+        
+        self.assertTrue(comment.thread_path.startswith(str(gparent_comment.pk)))
+        self.assertTrue(parent_comment.thread_path in comment.thread_path)
+        
+        self.assertEqual(comment.depth, 2)
