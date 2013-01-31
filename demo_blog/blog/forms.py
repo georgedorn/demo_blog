@@ -1,23 +1,28 @@
 from django import forms
-from django.contrib.comments import CommentForm
 from .models import Post, Comment
 
 class PostForm(forms.ModelForm):
+    """
+    Simple form for creating a post.
+    
+    We don't display the owner field as the owner is the user currently
+    logged in.  (See views.PostMixin).
+    """
     class Meta:
         model = Post
         exclude = ('owner')
-        widgets = {
-                   'title': forms.TextInput()
-                   
-                   }
+        widgets = {'title': forms.TextInput()}
         
 class CommentForm(forms.ModelForm):
+    """
+    Form for commenting.  Numerous fields are left off and calculated
+    during form processing.
+    """
+
     class Meta:
         model = Comment
         exclude = ('user', 'post', 'parent', 'thread_path')
-        widgets = {
-                    'user_name': forms.TextInput()
-            }
+        widgets = {'user_name': forms.TextInput()}
 
     def __init__(self, *args, **kwargs):
         """
@@ -36,6 +41,10 @@ class CommentForm(forms.ModelForm):
             del self.fields['user_name']
             
     def save(self, commit=True, *args, **kwargs):
+        """
+        Override default save to associate the comment with a post and
+        possibly a user.
+        """
         obj = super(CommentForm, self).save(commit=False, *args, **kwargs)
         obj.post = self.post
         if self.user.is_authenticated():

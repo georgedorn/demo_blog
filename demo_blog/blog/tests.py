@@ -367,8 +367,11 @@ class TestComments(CommentTestCase):
         reply = Comment.objects.get(user_name='Anonymous 2')
         self.assertEqual(reply.parent, comment)
         
-from .models import comment_path_separator
-class TestCommentPath(CommentTestCase):
+
+class TestCommentThreads(CommentTestCase):
+    """
+    Simple tests of comment threading.
+    """
     
     def test_comment_path_top(self):
         """
@@ -416,9 +419,9 @@ class TestCommentPath(CommentTestCase):
                                                content='This is the child comment',
                                                parent=parent_comment)
         
-        self.assertTrue(comment.thread_path.startswith(str(gparent_comment.pk)))
-        self.assertTrue(parent_comment.thread_path in comment.thread_path)
-        
+        #we don't test how the thread path is stored, we just care that
+        #the most-nested comment's path goes through both grandparent and parent comment.
+        self.assertEqual(comment.path_list, [str(gparent_comment.pk), str(parent_comment.pk)])
         self.assertEqual(comment.depth, 2)
         
     def test_get_replies(self):

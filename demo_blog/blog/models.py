@@ -6,11 +6,16 @@ from django.core.urlresolvers import reverse_lazy
 from django.contrib import admin
 
 class Post(models.Model):
+    """
+    A blog post.
+    """
     
     title = models.TextField()
     content = models.TextField()
     owner = models.ForeignKey(User)
 
+    #AutoSlugFields are automatically calculated upon save
+    #and in the case of a collision append -2, -3, etc.
     slug = AutoSlugField(populate_from = lambda x: x.title,
                          unique=True)
     
@@ -18,25 +23,40 @@ class Post(models.Model):
     modified = models.DateTimeField(auto_now = True)
     
     def get_absolute_url(self):
+        """
+        The authoritative url for viewing a post.
+        """
         return reverse_lazy('post-detail', kwargs={'slug':self.slug})
     
     def get_edit_url(self):
+        """
+        The authoritative url for editing a post.
+        """
         return reverse_lazy('post-edit', kwargs={'slug':self.slug})
 
     def get_delete_url(self):
+        """
+        The authoritative url for deleting a post.
+        """
         return reverse_lazy('post-delete', kwargs={'slug':self.slug})
     
-    @staticmethod
-    def get_by_slug(slug):
-        return Post.objects.get(slug=slug)
-    
     def get_comments(self):
-        return Comment.objects.filter(post=self).order_by('-created') #newest first?
+        """
+        Helper method for loading all comments on this post.
         
+        Not actually used if comment threading is used, except in some unit tests.
+        """
+        return Comment.objects.filter(post=self)
+    
+#This is just to help with development; admin can post this way but staff cannot.        
 admin.site.register(Post)
     
 
-comment_path_separator = ';'
+
+#delimiter used to store a comment's thread path.
+#see Comment.thread_path
+THREAD_PATH_SEPARATOR = ';'
+
 class Comment(models.Model):
     """
     Represents a comment on a post.
@@ -52,10 +72,14 @@ class Comment(models.Model):
     
     parent = models.ForeignKey('Comment', null=True, default=None) #for threaded comments, later
     
-    #this is actually unused at the moment, but could be used
-    #for pagination or AJAX loading of comment trees.
-    thread_path = models.TextField(default=None,
-                                   null=True) #stores the entire path of this comment
+    # The path to this comment.
+    # e.g. 1;5;6;8 means that this comment is a reply to comment 8, which in turn
+    # is a comment on 6, then 5, then 1.  
+    # A comment that is not a reply (i.e. a top-level comment on a post) will have a path of None (NULL).
+    
+    # This is actually unused at the moment outside of unit tests, but could be used
+    # for pagination or AJAX loading of comment trees.
+    thread_path = models.TextField(default=None, null=True) 
     
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -86,7 +110,7 @@ class Comment(models.Model):
         """
         if not self.thread_path:
             return []
-        return self.thread_path.split(comment_path_separator)
+        return self.thread_path.split(THREAD_PATH_SEPARATOR)
 
     @property
     def descendants_count(self):
@@ -97,7 +121,7 @@ class Comment(models.Model):
         if self.thread_path != '':
             raise ValueError('descendants_count only valid for top-level comments')
         
-        filter_string = "%s%s" % (self.pk, comment_path_separator)
+        filter_string = "%s%s" % (self.pk, THREAD_PATH_SEPARATOR)
         qs = (Comment.objects.filter(thread_path=str(self.pk)) |
                 Comment.objects.filter(thread_path__startswith=filter_string))
         return qs.count()
@@ -118,8 +142,7 @@ class Comment(models.Model):
         if self.parent:
             path = self.parent.path_list
             path.append(str(self.parent.pk))
-            
-            self.thread_path = comment_path_separator.join(path)
+            self.thread_path = THREAD_PATH_SEPARATOR.join(path)
         else:
             self.thread_path = None
         return super(Comment, self).save(*args, **kwargs)
@@ -138,5 +161,6 @@ class Comment(models.Model):
         return reverse_lazy('reply-create', kwargs={'post_slug':self.post.slug,
                                                     'parent_id':self.pk})
     
+#currently the only way to edit or delete a comment
 admin.site.register(Comment)
 

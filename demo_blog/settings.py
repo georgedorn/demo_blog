@@ -1,16 +1,18 @@
 # Django settings for demo_blog project.
+
+#include default settings from registration_defaults
 from registration_defaults.settings import *
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 import os
-#figure out where settings.py is so we can find the project-level templates without 
-#hardcoding that.
+# figure out where settings.py is so we can find the project-level templates without 
+# hardcoding that.
 project_path = os.path.abspath(os.path.dirname(__file__))
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+    ('George Dorn', 'georgedorn@gmail.com'),
 )
 
 MANAGERS = ADMINS
@@ -30,7 +32,7 @@ DATABASES = {
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'America/Los_Angeles'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -91,7 +93,6 @@ SECRET_KEY = 'b9thfw4l$)!5rof%mh%+ya@n%8pqn4x-ly69q%k^-ol8c6n5kn'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -100,8 +101,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 ROOT_URLCONF = 'demo_blog.urls'
@@ -114,9 +113,8 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     
-    #top-level templates dir, next to settings.py
+    #top-level templates dir, next to settings.py, which contains base.html and some error pages.
     os.path.join(project_path, 'templates'),
-#    REGISTRATION_TEMPLATE_DIR,
 )
 
 #template context processors:
@@ -132,9 +130,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
 )
 
-#in the case that we don't have a previous page to redirect to,
-#e.g. somebody clicked the activation url,
-#go home after login
+# In the case that we don't have a previous page to redirect to,
+# (e.g. somebody clicked the activation url in an email)
+# go home after login
 LOGIN_REDIRECT_URL = '/' 
 
 INSTALLED_APPS = (
@@ -145,10 +143,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'registration_defaults',
-    # Uncomment the next line to enable the admin:
     'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
     'demo_blog.blog',
     'demo_blog.accounts',
     'demo_blog.registration', #fork of django-registration 0.7
