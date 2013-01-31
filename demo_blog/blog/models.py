@@ -22,6 +22,12 @@ class Post(models.Model):
     created = models.DateTimeField(auto_now_add = True)
     modified = models.DateTimeField(auto_now = True)
     
+    class Meta:
+        """
+        By default, sort by newest first.
+        """
+        ordering = ['-created']    
+    
     def get_absolute_url(self):
         """
         The authoritative url for viewing a post.
