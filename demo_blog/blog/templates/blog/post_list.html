@@ -4,7 +4,7 @@
 <ul id='posts'>
 {% for obj in object_list %}
 <li>
-	<a href='{{obj.get_absolute_url}}'>{{obj.title}}</a> by {{obj.owner}} on {{object.created}}
+	<a href='{{obj.get_absolute_url}}'>{{obj.title}}</a> by {{obj.owner}} on {{obj.created}}
 	{% if obj.owner == request.user %}
 		<a href='{{obj.get_edit_url}}'>edit</a>
 		<a href='{{obj.get_delete_url}}'>delete</a>
