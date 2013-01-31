@@ -22,4 +22,4 @@ Notes
 * Nested comments are implemented by recursively including a template.  This would probably be done better via a template tag or client-side rendering of nested comments.
 * Caching was implement in the last commit with a minimum of effort via django-johnny-cache.  It does queryset and template caching, but I didn't notice any significant speed improvemnts, likely due to everything being fast enough already at the level of load I can produce alone.
 * I created a project on pivotaltracker.com to track my own progress: https://www.pivotaltracker.com/projects/737573
-
+* There's a demo site running.  Given that it's wide open and a good spam target, contact me for info.
